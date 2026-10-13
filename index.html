@@ -1,0 +1,1309 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Heart, Calendar, MapPin, Clock, Sparkles, Music, Volume2, VolumeX, 
+  Menu, X, CheckCircle2, ChevronRight, Share2, Printer, Award, Gift, 
+  Smile, Shield, ArrowRight, Play, Pause, RefreshCw, Eye, Check, AlertCircle,
+  Camera, Compass, Music2, Users, Star, Cake, Bell
+} from 'lucide-react';
+
+const WEDDING_CONFIG = {
+  groom: "Chinedu Benjamin",
+  bride: "Ifeoma Becky",
+  brand: "CHIBECK 2026",
+  dateString: "December 19, 2026", // Configurable valid date
+  time: "10:00 AM WAT",
+  location: "Asaba, Delta State, Nigeria",
+  ceremony: {
+    title: "The Wedding Ceremony",
+    date: "Saturday, December 19, 2026",
+    time: "10:00 AM Prompt",
+    venue: "All Saints Cathedral, Asaba",
+    address: "Nnebisi Road, GRA, Asaba, Delta State",
+    dressCode: "Midnight Burgundy, Antique Gold & Warm Ivory"
+  },
+  reception: {
+    title: "The Grand Reception",
+    date: "Saturday, December 19, 2026",
+    time: "2:00 PM",
+    venue: "The Dome Event Centre",
+    address: "Okpanam Road, Asaba, Delta State",
+    dressCode: "Traditional Elegance / Black Tie Glamour"
+  },
+  colors: [
+    { name: "Midnight Burgundy", hex: "#400D20", border: "#C5A15B" },
+    { name: "Deep Wine", hex: "#260814", border: "#C5A15B" },
+    { name: "Antique Gold", hex: "#C5A15B", border: "#FFF4E5" },
+    { name: "Champagne Gold", hex: "#E7CD94", border: "#400D20" }
+  ]
+};
+
+export default function App() {
+  // Navigation & UI state
+  const [activeTab, setActiveTab] = useState('home');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [skipMotion, setSkipMotion] = useState(false);
+  const [isPlayingMusic, setIsPlayingMusic] = useState(false);
+  const [gateUnlocked, setGateUnlocked] = useState(false);
+
+  // Audio synthesizer for subtle background wedding chime/melody
+  const audioCtxRef = useRef(null);
+  const audioIntervalRef = useRef(null);
+
+  useEffect(() => {
+    // Simulate initial preloader timer
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Handle ambient web audio chime
+  const toggleMusic = () => {
+    if (!isPlayingMusic) {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtxRef.current = new AudioContext();
+        const notes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63]; // C E G C G E chords
+        let index = 0;
+        
+        const playTone = () => {
+          if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') return;
+          const osc = audioCtxRef.current.createOscillator();
+          const gain = audioCtxRef.current.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = notes[index % notes.length];
+          index++;
+
+          gain.gain.setValueAtTime(0.05, audioCtxRef.current.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtxRef.current.currentTime + 3);
+
+          osc.connect(gain);
+          gain.connect(audioCtxRef.current.destination);
+          osc.start();
+          osc.stop(audioCtxRef.current.currentTime + 3);
+        };
+
+        playTone();
+        audioIntervalRef.current = setInterval(playTone, 3500);
+        setIsPlayingMusic(true);
+      } catch (e) {
+        console.log("Audio not supported or blocked", e);
+      }
+    } else {
+      if (audioIntervalRef.current) clearInterval(audioIntervalRef.current);
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close();
+        audioCtxRef.current = null;
+      }
+      setIsPlayingMusic(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#400D20] text-[#FFF4E5] font-sans selection:bg-[#C5A15B] selection:text-[#260814] overflow-x-hidden relative">
+      
+      {/* Cinematic Preloader */}
+      {isLoading && (
+        <div className="fixed inset-0 z-50 bg-[#260814] flex flex-col items-center justify-center p-6 text-center transition-opacity duration-1000">
+          <div className="relative mb-6">
+            <div className="w-28 h-28 rounded-full border-2 border-[#C5A15B] flex items-center justify-center animate-pulse">
+              <span className="font-serif text-3xl text-[#E7CD94] tracking-widest">C × B</span>
+            </div>
+            <div className="absolute inset-0 rounded-full border border-dashed border-[#E7CD94]/40 animate-spin" style={{ animationDuration: '12s' }}></div>
+          </div>
+          <h1 className="font-serif text-4xl text-[#E7CD94] tracking-widest mb-2">CHIBECK 2026</h1>
+          <p className="text-[#FFF4E5]/80 italic font-serif text-lg mb-8">"Two hearts. One beautiful forever."</p>
+          <button 
+            onClick={() => setIsLoading(false)}
+            className="text-xs uppercase tracking-widest text-[#C5A15B] border border-[#C5A15B]/50 px-6 py-2 rounded-full hover:bg-[#C5A15B] hover:text-[#260814] transition-all"
+          >
+            Skip Intro
+          </button>
+        </div>
+      )}
+
+      {/* Floating Audio & Navigation Bar */}
+      <nav className="sticky top-0 z-40 bg-[#260814]/90 backdrop-blur-md border-b border-[#C5A15B]/30 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('home')}>
+          <div className="w-10 h-10 rounded-full border border-[#C5A15B] flex items-center justify-center text-[#E7CD94] font-serif font-bold text-sm">
+            CB
+          </div>
+          <div>
+            <span className="font-serif tracking-widest text-lg block text-[#E7CD94]">CHIBECK</span>
+            <span className="text-[10px] tracking-widest text-[#FFF4E5]/60 uppercase block">Asaba 2026</span>
+          </div>
+        </div>
+
+        {/* Desktop Nav Links */}
+        <div className="hidden lg:flex items-center space-x-8 text-sm tracking-wider uppercase font-medium">
+          {[
+            { id: 'home', label: 'Home' },
+            { id: 'gate', label: 'Kingdom Gate' },
+            { id: 'story', label: 'Our Story' },
+            { id: 'celebration', label: 'Events' },
+            { id: 'gallery', label: 'Gallery' },
+            { id: 'funzone', label: 'Fun Zone' },
+            { id: 'invitation', label: 'Invitation' },
+            { id: 'rsvp', label: 'RSVP' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`transition-colors hover:text-[#E7CD94] relative py-1 ${activeTab === tab.id ? 'text-[#E7CD94] font-semibold' : 'text-[#FFF4E5]/80'}`}
+            >
+              {tab.label}
+              {activeTab === tab.id && (
+                <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#C5A15B]"></span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Right action tools */}
+        <div className="flex items-center space-x-4">
+          <button 
+            onClick={toggleMusic}
+            title={isPlayingMusic ? "Mute Background Chime" : "Play Background Chime"}
+            className="p-2.5 rounded-full border border-[#C5A15B]/40 text-[#E7CD94] hover:bg-[#C5A15B]/20 transition-all flex items-center justify-center"
+          >
+            {isPlayingMusic ? <Volume2 size={18} /> : <VolumeX size={18} />}
+          </button>
+          <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden p-2 text-[#E7CD94]"
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      </nav>
+
+      {/* Mobile Menu Dropdown */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden fixed inset-x-0 top-[73px] bg-[#260814]/98 border-b border-[#C5A15B]/30 p-6 z-40 flex flex-col space-y-4 shadow-2xl animate-fadeIn">
+          {[
+            { id: 'home', label: 'Home' },
+            { id: 'gate', label: 'Kingdom Gate' },
+            { id: 'story', label: 'Our Story' },
+            { id: 'celebration', label: 'Events' },
+            { id: 'gallery', label: 'Gallery' },
+            { id: 'funzone', label: 'Fun Zone' },
+            { id: 'invitation', label: 'Invitation' },
+            { id: 'rsvp', label: 'RSVP' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => { setActiveTab(tab.id); setMobileMenuOpen(false); }}
+              className={`text-left text-sm uppercase tracking-wider py-2 border-b border-[#C5A15B]/10 ${activeTab === tab.id ? 'text-[#E7CD94] font-bold' : 'text-[#FFF4E5]/80'}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Main Content Sections */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {activeTab === 'home' && <HeroSection setActiveTab={setActiveTab} />}
+        {activeTab === 'gate' && <WeddingGate onUnlock={() => setGateUnlocked(true)} setActiveTab={setActiveTab} />}
+        {activeTab === 'story' && <LoveStory />}
+        {activeTab === 'celebration' && <EventDetails />}
+        {activeTab === 'gallery' && <PhotoGallery />}
+        {activeTab === 'funzone' && <FunZone />}
+        {activeTab === 'invitation' && <InvitationCard />}
+        {activeTab === 'rsvp' && <RSVPSection />}
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-[#260814] border-t border-[#C5A15B]/30 py-12 px-6 mt-20 text-center">
+        <div className="max-w-4xl mx-auto flex flex-col items-center justify-center space-y-4">
+          <div className="w-16 h-16 rounded-full border border-[#C5A15B] flex items-center justify-center text-[#E7CD94] font-serif text-xl">
+            C×B
+          </div>
+          <h2 className="font-serif text-2xl tracking-widest text-[#E7CD94]">CHIBECK 2026</h2>
+          <p className="text-[#FFF4E5]/70 italic text-sm">"Celebrating love, laughter, friendship, and forever."</p>
+          <p className="text-xs uppercase tracking-widest text-[#C5A15B]/80 pt-4">Chinedu Benjamin & Ifeoma Becky • Asaba, Delta State</p>
+          
+          <div className="flex space-x-6 pt-4">
+            <button onClick={() => {
+              if (navigator.share) {
+                navigator.share({ title: 'Chibeck 2026', text: 'Join us for Chibeck 2026 wedding celebration!', url: window.location.href });
+              } else {
+                alert("Link copied to clipboard!");
+              }
+            }} className="flex items-center space-x-2 text-xs uppercase bg-[#C5A15B]/20 text-[#E7CD94] px-4 py-2 rounded-full border border-[#C5A15B]/40 hover:bg-[#C5A15B] hover:text-[#260814] transition-all">
+              <Share2 size={14} /> <span>Share Invitation</span>
+            </button>
+          </div>
+        </div>
+      </footer>
+
+    </div>
+  );
+}
+
+function HeroSection({ setActiveTab }) {
+  // Countdown calculation
+  const [timeLeft, setTimeLeft] = useState({ days: 298, hours: 14, minutes: 45, seconds: 30 });
+
+  useEffect(() => {
+    const target = new Date("December 19, 2026 10:00:00").getTime();
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const difference = target - now;
+      if (difference > 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((difference % (1000 * 60)) / 1000)
+        });
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="relative rounded-3xl overflow-hidden border border-[#C5A15B]/40 shadow-2xl bg-[#260814] min-h-[85vh] flex flex-col items-center justify-center p-6 text-center">
+      {/* Background with overlay */}
+      <div className="absolute inset-0 bg-cover bg-center opacity-35" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80')` }}></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-[#400D20] via-[#400D20]/80 to-transparent"></div>
+
+      <div className="relative z-10 max-w-3xl mx-auto space-y-6 py-12">
+        <span className="text-xs uppercase tracking-[0.3em] text-[#E7CD94] border-y border-[#C5A15B]/50 py-1 px-4 inline-block">
+          With Love, Joy & The Blessing of Our Families
+        </span>
+        
+        <h1 className="font-serif text-5xl sm:text-7xl font-bold tracking-tight text-[#FFF4E5] drop-shadow-md">
+          CHINEDU BENJAMIN <br />
+          <span className="text-3xl sm:text-5xl italic font-normal text-[#E7CD94] my-2 block">&</span>
+          IFEOMA BECKY
+        </h1>
+
+        <p className="text-xs sm:text-sm uppercase tracking-[0.4em] text-[#C5A15B] font-semibold">
+          {WEDDING_CONFIG.brand} • ASABA, DELTA STATE
+        </p>
+
+        <p className="font-serif italic text-lg sm:text-xl text-[#FFF4E5]/90 max-w-xl mx-auto">
+          "Two hearts, one promise, one beautiful forever. Together with our families, we invite you to celebrate the beginning of our forever."
+        </p>
+
+        {/* Live Countdown Grid */}
+        <div className="grid grid-cols-4 gap-3 max-w-md mx-auto pt-4 pb-2">
+          {[
+            { label: 'Days', value: timeLeft.days },
+            { label: 'Hours', value: timeLeft.hours },
+            { label: 'Mins', value: timeLeft.minutes },
+            { label: 'Secs', value: timeLeft.seconds }
+          ].map((item, idx) => (
+            <div key={idx} className="bg-[#260814]/80 backdrop-blur-md border border-[#C5A15B]/40 p-3 rounded-xl shadow-inner">
+              <span className="block font-serif text-2xl sm:text-3xl text-[#E7CD94] font-bold">{item.value}</span>
+              <span className="block text-[10px] uppercase tracking-widest text-[#FFF4E5]/70 pt-1">{item.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap justify-center gap-4 pt-6">
+          <button 
+            onClick={() => setActiveTab('gate')}
+            className="bg-gradient-to-r from-[#C5A15B] to-[#E7CD94] text-[#260814] font-bold px-8 py-3.5 rounded-full shadow-lg hover:opacity-90 transition-all tracking-wider text-sm flex items-center space-x-2"
+          >
+            <span>ENTER KINGDOM GATE</span>
+            <ChevronRight size={16} />
+          </button>
+          <button 
+            onClick={() => setActiveTab('invitation')}
+            className="bg-transparent border border-[#C5A15B] text-[#FFF4E5] font-semibold px-8 py-3.5 rounded-full hover:bg-[#C5A15B]/20 transition-all tracking-wider text-sm"
+          >
+            VIEW INVITATION
+          </button>
+          <button 
+            onClick={() => setActiveTab('rsvp')}
+            className="bg-[#260814]/80 border border-[#C5A15B]/60 text-[#E7CD94] font-semibold px-8 py-3.5 rounded-full hover:bg-[#C5A15B] hover:text-[#260814] transition-all tracking-wider text-sm"
+          >
+            RSVP NOW
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WeddingGate({ onUnlock, setActiveTab }) {
+  const [step, setStep] = useState(1);
+  const [unlocked, setUnlocked] = useState(false);
+  const [feedback, setFeedback] = useState('');
+  
+  // Challenge 1 state
+  const [ans1, setAns1] = useState('');
+  // Challenge 2 state
+  const [ans2, setAns2] = useState('');
+  // Challenge 3 state
+  const [ans3, setAns3] = useState('');
+
+  const handleChallenge1 = (selected) => {
+    if (selected === 'correct') {
+      setFeedback("Correct! You sabi this wedding matter. Your Chibeck certificate is loading!");
+      setTimeout(() => { setFeedback(''); setStep(2); }, 1500);
+    } else {
+      setFeedback("Ah ah! You wan attend another person's wedding? Try again, abeg.");
+    }
+  };
+
+  const handleChallenge2 = (selected) => {
+    if (selected === 'correct') {
+      setFeedback("Correct! You are not just a guest; you are on the planning committee!");
+      setTimeout(() => { setFeedback(''); setStep(3); }, 1500);
+    } else {
+      setFeedback("Even Google Calendar is confused by you. Try again!");
+    }
+  };
+
+  const handleChallenge3 = (selected) => {
+    if (selected === 'correct') {
+      setFeedback("Correct! Start ironing that outfit, our fashion icon!");
+      setTimeout(() => { 
+        setFeedback(''); 
+        setUnlocked(true); 
+        onUnlock();
+      }, 1500);
+    } else {
+      setFeedback("Your fashion sense is calling, but Chibeck's colour committee has declined the call. Try again!");
+    }
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto bg-[#260814] border border-[#C5A15B]/50 rounded-3xl p-8 shadow-2xl relative">
+      <div className="text-center mb-8">
+        <span className="text-xs uppercase tracking-[0.3em] text-[#C5A15B] block mb-2">Interactive Gateway</span>
+        <h2 className="font-serif text-3xl sm:text-4xl text-[#E7CD94]">Before You Enter Chibeck Kingdom...</h2>
+        <p className="text-sm text-[#FFF4E5]/80 italic mt-2">
+          "Dear wedding guest, love is sweet, but entry into Chibeck Kingdom comes with a little assignment. Complete these fun challenges to unlock the invitation!"
+        </p>
+        <div className="mt-4 inline-block bg-[#400D20] border border-[#C5A15B]/40 px-4 py-1.5 rounded-full text-xs text-[#E7CD94] tracking-widest uppercase">
+          Your Chibeck Guest Mission: {unlocked ? '3' : step - 1} of 3 completed
+        </div>
+      </div>
+
+      {feedback && (
+        <div className="mb-6 p-4 rounded-xl bg-[#400D20] border border-[#C5A15B] text-center text-sm text-[#E7CD94] animate-pulse">
+          {feedback}
+        </div>
+      )}
+
+      {!unlocked ? (
+        <div className="space-y-6">
+          {step === 1 && (
+            <div className="space-y-4">
+              <h3 className="font-serif text-xl text-[#FFF4E5]">Challenge 1: The Couple Name Challenge</h3>
+              <p className="text-sm text-[#FFF4E5]/70">Who is getting married? No cheating o!</p>
+              <div className="grid grid-cols-1 gap-3">
+                {[
+                  { label: "A. Mr. Fine Boy & Madam Slay Queen", val: "wrong1" },
+                  { label: "B. Chinedu Benjamin & Ifeoma Becky", val: "correct" },
+                  { label: "C. Romeo & Juliet from Asaba", val: "wrong2" },
+                  { label: "D. Uncle Cashout & Aunty Bride Price", val: "wrong3" }
+                ].map((opt, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleChallenge1(opt.val)}
+                    className="text-left p-4 rounded-xl border border-[#C5A15B]/30 bg-[#400D20]/60 hover:bg-[#C5A15B]/20 transition-all text-sm font-medium text-[#FFF4E5]"
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-4">
+              <h3 className="font-serif text-xl text-[#FFF4E5]">Challenge 2: The Wedding Date Detective</h3>
+              <p className="text-sm text-[#FFF4E5]/70">Wedding detectives, when is the big day?</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  { label: "October 12, 2026", val: "wrong1" },
+                  { label: "December 19, 2026", val: "correct" },
+                  { label: "January 01, 2027", val: "wrong2" },
+                  { label: "February 14, 2026", val: "wrong3" }
+                ].map((opt, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleChallenge2(opt.val)}
+                    className="text-left p-4 rounded-xl border border-[#C5A15B]/30 bg-[#400D20]/60 hover:bg-[#C5A15B]/20 transition-all text-sm font-medium text-[#FFF4E5]"
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-4">
+              <h3 className="font-serif text-xl text-[#FFF4E5]">Challenge 3: The Colour of the Day</h3>
+              <p className="text-sm text-[#FFF4E5]/70">Wedding fashion police, what colours are we wearing to Chibeck 2026?</p>
+              <div className="grid grid-cols-1 gap-3">
+                {[
+                  { label: "Royal Blue & Silver", val: "wrong1" },
+                  { label: "Emerald Green & Champagne", val: "wrong2" },
+                  { label: "Midnight Burgundy, Antique Gold & Warm Ivory", val: "correct" },
+                  { label: "Black & Neon Pink", val: "wrong3" }
+                ].map((opt, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleChallenge3(opt.val)}
+                    className="text-left p-4 rounded-xl border border-[#C5A15B]/30 bg-[#400D20]/60 hover:bg-[#C5A15B]/20 transition-all text-sm font-medium text-[#FFF4E5]"
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="pt-4 flex justify-between items-center text-xs text-[#FFF4E5]/50">
+            <span>Step {step} of 3</span>
+            <button 
+              onClick={() => { setUnlocked(true); onUnlock(); }}
+              className="text-[#C5A15B] underline hover:text-[#E7CD94]"
+            >
+              Skip the games and view invitation
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="text-center space-y-6 py-6 animate-fadeIn">
+          <div className="w-20 h-20 rounded-full bg-[#C5A15B]/20 border-2 border-[#C5A15B] flex items-center justify-center mx-auto text-[#E7CD94]">
+            <Sparkles size={36} />
+          </div>
+          <h3 className="font-serif text-3xl text-[#E7CD94]">MISSION ACCOMPLISHED!</h3>
+          <p className="text-sm text-[#FFF4E5]/80 max-w-md mx-auto">
+            You have officially earned your invitation to Chibeck 2026. Your royal passport to Asaba is ready!
+          </p>
+          <button 
+            onClick={() => setActiveTab('invitation')}
+            className="bg-gradient-to-r from-[#C5A15B] to-[#E7CD94] text-[#260814] font-bold px-8 py-4 rounded-full shadow-lg hover:opacity-90 transition-all tracking-wider text-sm inline-flex items-center space-x-2"
+          >
+            <span>OPEN MY INVITATION</span>
+            <ArrowRight size={16} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LoveStory() {
+  const milestones = [
+    {
+      date: "The First Meeting",
+      title: "Asaba Sunday Afternoon",
+      desc: "An unexpected encounter in Asaba brought two kindred spirits together. A simple conversation sparked an unforgettable connection.",
+      img: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=800&q=80"
+    },
+    {
+      date: "When Friendship Became Love",
+      title: "Shared Dreams & Laughter",
+      desc: "Through late-night chats, shared ambitions, and countless weekend dates, friendship naturally blossomed into a profound romance.",
+      img: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=800&q=80"
+    },
+    {
+      date: "The Proposal",
+      title: "A Golden Sunset Promise",
+      desc: "Under a breathtaking golden sunset, Chinedu asked the question that would change their lives forever. With tears of joy, Ifeoma said yes!",
+      img: "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=800&q=80"
+    },
+    {
+      date: "The Journey to Chibeck 2026",
+      title: "Forever Begins Here",
+      desc: "Now, surrounded by family, love, and immense joy, we invite you to witness our union as we become one in Asaba.",
+      img: "https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=800&q=80"
+    }
+  ];
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-12">
+      <div className="text-center space-y-3">
+        <span className="text-xs uppercase tracking-[0.3em] text-[#C5A15B]">How Our Forever Began</span>
+        <h2 className="font-serif text-4xl text-[#E7CD94]">Our Love Story</h2>
+        <p className="text-sm text-[#FFF4E5]/80 italic">"Every great love story has a beginning. Ours became a lifetime promise."</p>
+      </div>
+
+      <div className="relative border-l border-[#C5A15B]/40 ml-4 sm:ml-32 space-y-12 py-6">
+        {milestones.map((m, idx) => (
+          <div key={idx} className="relative pl-8 sm:pl-12 group">
+            {/* Timeline dot */}
+            <div className="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-[#C5A15B] border-4 border-[#400D20]"></div>
+            
+            {/* Date badge on left for desktop */}
+            <div className="hidden sm:block absolute -left-36 top-1 text-right w-24 text-xs font-bold uppercase tracking-widest text-[#E7CD94]">
+              {m.date}
+            </div>
+
+            <div className="bg-[#260814] border border-[#C5A15B]/30 rounded-2xl p-6 shadow-xl space-y-4 hover:border-[#C5A15B] transition-all">
+              <span className="sm:hidden text-xs font-bold uppercase tracking-widest text-[#E7CD94] block">{m.date}</span>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                <div className="md:col-span-2 space-y-2">
+                  <h3 className="font-serif text-2xl text-[#E7CD94]">{m.title}</h3>
+                  <p className="text-sm text-[#FFF4E5]/80 leading-relaxed">{m.desc}</p>
+                </div>
+                <div className="rounded-xl overflow-hidden h-40 border border-[#C5A15B]/30">
+                  <img src={m.img} alt={m.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="text-center pt-8">
+        <p className="font-serif italic text-xl text-[#E7CD94]">"And now, our next chapter begins with you."</p>
+      </div>
+    </div>
+  );
+}
+
+function EventDetails() {
+  return (
+    <div className="max-w-4xl mx-auto space-y-10">
+      <div className="text-center space-y-3">
+        <span className="text-xs uppercase tracking-[0.3em] text-[#C5A15B]">Asaba Celebration</span>
+        <h2 className="font-serif text-4xl text-[#E7CD94]">The Wedding Celebration</h2>
+        <p className="text-sm text-[#FFF4E5]/80 italic">"Join us as we exchange vows and celebrate our joyous union."</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Ceremony Card */}
+        <div className="bg-[#260814] border border-[#C5A15B]/40 rounded-3xl p-8 shadow-xl flex flex-col justify-between space-y-6">
+          <div className="space-y-4">
+            <div className="w-12 h-12 rounded-full bg-[#C5A15B]/20 border border-[#C5A15B] flex items-center justify-center text-[#E7CD94]">
+              <Calendar size={22} />
+            </div>
+            <h3 className="font-serif text-2xl text-[#E7CD94]">{WEDDING_CONFIG.ceremony.title}</h3>
+            <div className="space-y-2 text-sm text-[#FFF4E5]/80">
+              <p className="flex items-center space-x-2"><Clock size={16} className="text-[#C5A15B]" /> <span>{WEDDING_CONFIG.ceremony.date} @ {WEDDING_CONFIG.ceremony.time}</span></p>
+              <p className="flex items-center space-x-2"><MapPin size={16} className="text-[#C5A15B]" /> <span>{WEDDING_CONFIG.ceremony.venue}</span></p>
+              <p className="text-xs text-[#FFF4E5]/60 pl-6">{WEDDING_CONFIG.ceremony.address}</p>
+            </div>
+          </div>
+          <div className="border-t border-[#C5A15B]/20 pt-4">
+            <p className="text-xs text-[#E7CD94] uppercase tracking-wider font-semibold">Dress Code: {WEDDING_CONFIG.ceremony.dressCode}</p>
+          </div>
+        </div>
+
+        {/* Reception Card */}
+        <div className="bg-[#260814] border border-[#C5A15B]/40 rounded-3xl p-8 shadow-xl flex flex-col justify-between space-y-6">
+          <div className="space-y-4">
+            <div className="w-12 h-12 rounded-full bg-[#C5A15B]/20 border border-[#C5A15B] flex items-center justify-center text-[#E7CD94]">
+              <Sparkles size={22} />
+            </div>
+            <h3 className="font-serif text-2xl text-[#E7CD94]">{WEDDING_CONFIG.reception.title}</h3>
+            <div className="space-y-2 text-sm text-[#FFF4E5]/80">
+              <p className="flex items-center space-x-2"><Clock size={16} className="text-[#C5A15B]" /> <span>{WEDDING_CONFIG.reception.date} @ {WEDDING_CONFIG.reception.time}</span></p>
+              <p className="flex items-center space-x-2"><MapPin size={16} className="text-[#C5A15B]" /> <span>{WEDDING_CONFIG.reception.venue}</span></p>
+              <p className="text-xs text-[#FFF4E5]/60 pl-6">{WEDDING_CONFIG.reception.address}</p>
+            </div>
+          </div>
+          <div className="border-t border-[#C5A15B]/20 pt-4">
+            <p className="text-xs text-[#E7CD94] uppercase tracking-wider font-semibold">Dress Code: {WEDDING_CONFIG.reception.dressCode}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PhotoGallery() {
+  const [filter, setFilter] = useState('all');
+  const [selectedImg, setSelectedImg] = useState(null);
+
+  const photos = [
+    { id: 1, cat: 'prewedding', url: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80', title: 'Sunset Romance' },
+    { id: 2, cat: 'traditional', url: 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&w=800&q=80', title: 'Traditional Elegance' },
+    { id: 3, cat: 'studio', url: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=800&q=80', title: 'Studio Portrait' },
+    { id: 4, cat: 'prewedding', url: 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=800&q=80', title: 'Golden Hour' },
+    { id: 5, cat: 'traditional', url: 'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=800&q=80', title: 'Joyful Moments' },
+    { id: 6, cat: 'studio', url: 'https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&w=800&q=80', title: 'Forever Love' }
+  ];
+
+  const filtered = filter === 'all' ? photos : photos.filter(p => p.cat === filter);
+
+  return (
+    <div className="max-w-6xl mx-auto space-y-8">
+      <div className="text-center space-y-3">
+        <span className="text-xs uppercase tracking-[0.3em] text-[#C5A15B]">Visual Memories</span>
+        <h2 className="font-serif text-4xl text-[#E7CD94]">The Chibeck Gallery</h2>
+        <p className="text-sm text-[#FFF4E5]/80 italic">"Glimpses into our journey of love and celebration."</p>
+
+        {/* Filter buttons */}
+        <div className="flex flex-wrap justify-center gap-3 pt-4">
+          {[
+            { id: 'all', label: 'All Moments' },
+            { id: 'prewedding', label: 'Pre-Wedding' },
+            { id: 'traditional', label: 'Traditional Looks' },
+            { id: 'studio', label: 'Studio Portraits' }
+          ].map(btn => (
+            <button
+              key={btn.id}
+              onClick={() => setFilter(btn.id)}
+              className={`px-5 py-2 rounded-full text-xs uppercase tracking-widest border transition-all ${filter === btn.id ? 'bg-[#C5A15B] text-[#260814] border-[#C5A15B] font-bold' : 'border-[#C5A15B]/40 text-[#FFF4E5] hover:bg-[#C5A15B]/20'}`}
+            >
+              {btn.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Masonry Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {filtered.map(p => (
+          <div 
+            key={p.id}
+            onClick={() => setSelectedImg(p)}
+            className="group relative rounded-2xl overflow-hidden border border-[#C5A15B]/30 h-72 cursor-pointer shadow-xl bg-[#260814]"
+          >
+            <img src={p.url} alt={p.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#260814] via-transparent opacity-0 group-hover:opacity-90 transition-opacity flex items-end p-6">
+              <span className="font-serif text-lg text-[#E7CD94]">{p.title}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Lightbox Modal */}
+      {selectedImg && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4">
+          <button 
+            onClick={() => setSelectedImg(null)}
+            className="absolute top-6 right-6 text-[#E7CD94] bg-[#260814] p-3 rounded-full border border-[#C5A15B]"
+          >
+            <X size={24} />
+          </button>
+          <div className="max-w-4xl max-h-[80vh] rounded-2xl overflow-hidden border border-[#C5A15B]">
+            <img src={selectedImg.url} alt={selectedImg.title} className="max-w-full max-h-[70vh] object-contain" />
+            <div className="bg-[#260814] p-4 text-center">
+              <h3 className="font-serif text-xl text-[#E7CD94]">{selectedImg.title}</h3>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FunZone() {
+  const [activeGame, setActiveGame] = useState('trivia');
+
+  return (
+    <div className="max-w-5xl mx-auto space-y-8">
+      <div className="text-center space-y-3">
+        <span className="text-xs uppercase tracking-[0.3em] text-[#C5A15B]">Guest Entertainment</span>
+        <h2 className="font-serif text-4xl text-[#E7CD94]">No Be Serious Only — The Chibeck Fun Zone!</h2>
+        <p className="text-sm text-[#FFF4E5]/80 italic">"You don collect invitation. Now make we test your wedding guest qualifications!"</p>
+
+        {/* Game Navigation tabs */}
+        <div className="flex flex-wrap justify-center gap-2 pt-4">
+          {[
+            { id: 'trivia', label: '1. Trivia' },
+            { id: 'cake', label: '2. Catch Cake' },
+            { id: 'bouquet', label: '3. Catch Bouquet' },
+            { id: 'vows', label: '4. Vow Builder' },
+            { id: 'quiz', label: '5. Guest Quiz' },
+            { id: 'memory', label: '6. Memory Match' }
+          ].map(g => (
+            <button
+              key={g.id}
+              onClick={() => setActiveGame(g.id)}
+              className={`px-4 py-2 rounded-xl text-xs uppercase tracking-wider border transition-all ${activeGame === g.id ? 'bg-[#C5A15B] text-[#260814] border-[#C5A15B] font-bold' : 'border-[#C5A15B]/30 text-[#FFF4E5] hover:bg-[#C5A15B]/20'}`}
+            >
+              {g.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-[#260814] border border-[#C5A15B]/40 rounded-3xl p-6 sm:p-8 shadow-2xl">
+        {activeGame === 'trivia' && <GameTrivia />}
+        {activeGame === 'cake' && <GameCake />}
+        {activeGame === 'bouquet' && <GameBouquet />}
+        {activeGame === 'vows' && <GameVows />}
+        {activeGame === 'quiz' && <GameQuiz />}
+        {activeGame === 'memory' && <GameMemory />}
+      </div>
+    </div>
+  );
+}
+
+// Game 1: Trivia
+function GameTrivia() {
+  const questions = [
+    { q: "What is the official wedding brand?", opts: ["Chibeck 2026", "Chinedu & Ifeoma Forever", "Asaba Love 2026"], ans: 0 },
+    { q: "Which city is hosting the wedding celebration?", opts: ["Lagos", "Asaba, Delta State", "Abuja"], ans: 1 },
+    { q: "What is the groom's full name?", opts: ["Chinedu Benjamin", "Chinedu Okoye", "Benjamin Chinedu"], ans: 0 },
+    { q: "What is the bride's full name?", opts: ["Ifeoma Becky", "Becky Nwachukwu", "Ifeoma Grace"], ans: 0 },
+    { q: "What is the official colour scheme?", opts: ["Royal Blue & Silver", "Midnight Burgundy, Antique Gold & Warm Ivory", "Emerald Green"], ans: 1 }
+  ];
+
+  const [current, setCurrent] = useState(0);
+  const [score, setScore] = useState(0);
+  const [finished, setFinished] = useState(false);
+
+  const handleAnswer = (idx) => {
+    if (idx === questions[current].ans) setScore(score + 1);
+    if (current + 1 < questions.length) {
+      setCurrent(current + 1);
+    } else {
+      setFinished(true);
+    }
+  };
+
+  return (
+    <div className="max-w-xl mx-auto space-y-6 text-center">
+      <h3 className="font-serif text-2xl text-[#E7CD94]">Who Knows Chibeck Best?</h3>
+      {!finished ? (
+        <div className="space-y-6">
+          <p className="text-sm text-[#FFF4E5]/70">Question {current + 1} of {questions.length}</p>
+          <h4 className="font-serif text-xl text-[#FFF4E5]">{questions[current].q}</h4>
+          <div className="grid grid-cols-1 gap-3">
+            {questions[current].opts.map((opt, i) => (
+              <button
+                key={i}
+                onClick={() => handleAnswer(i)}
+                className="p-4 rounded-xl border border-[#C5A15B]/30 bg-[#400D20] hover:bg-[#C5A15B] hover:text-[#260814] transition-all text-sm font-medium"
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <h4 className="font-serif text-3xl text-[#E7CD94]">Quiz Completed!</h4>
+          <p className="text-lg text-[#FFF4E5]">You scored {score} out of {questions.length}</p>
+          <p className="text-sm italic text-[#C5A15B]">
+            {score <= 2 ? "Na wedding you come or na free food?" : score <= 4 ? "You're a certified Chibeck supporter!" : "Wedding planner in disguise! Somebody give this guest a microphone!"}
+          </p>
+          <button 
+            onClick={() => { setCurrent(0); setScore(0); setFinished(false); }}
+            className="bg-[#C5A15B] text-[#260814] px-6 py-2.5 rounded-full font-bold text-xs uppercase tracking-widest"
+          >
+            Play Again
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Game 2: Catch the Cake
+function GameCake() {
+  const [score, setScore] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [basketPos, setBasketPos] = useState(50); // percentage
+  const [cakePos, setCakePos] = useState({ x: 50, y: 0 });
+
+  useEffect(() => {
+    let timer, gameLoop;
+    if (isPlaying && timeLeft > 0) {
+      timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
+      gameLoop = setInterval(() => {
+        setCakePos(prev => {
+          let newY = prev.y + 4;
+          let newX = prev.x;
+          if (newY > 90) {
+            // Check catch
+            if (Math.abs(newX - basketPos) < 15) {
+              setScore(s => s + 1);
+            }
+            return { x: Math.floor(Math.random() * 80) + 10, y: 0 };
+          }
+          return { x: newX, y: newY };
+        });
+      }, 50);
+    } else if (timeLeft === 0) {
+      setIsPlaying(false);
+    }
+    return () => { clearInterval(timer); clearInterval(gameLoop); };
+  }, [isPlaying, timeLeft, basketPos]);
+
+  return (
+    <div className="max-w-lg mx-auto text-center space-y-4">
+      <h3 className="font-serif text-2xl text-[#E7CD94]">Save the Wedding Cake</h3>
+      <p className="text-sm text-[#FFF4E5]/70">Catch as many falling cake slices as you can in 30 seconds!</p>
+      
+      <div className="flex justify-between text-sm font-bold text-[#E7CD94] px-4">
+        <span>Score: {score}</span>
+        <span>Time: {timeLeft}s</span>
+      </div>
+
+      <div className="relative h-72 bg-[#400D20] border-2 border-[#C5A15B]/50 rounded-2xl overflow-hidden cursor-pointer"
+           onMouseMove={(e) => {
+             const rect = e.currentTarget.getBoundingClientRect();
+             const x = ((e.clientX - rect.left) / rect.width) * 100;
+             setBasketPos(x);
+           }}
+           onTouchMove={(e) => {
+             const rect = e.currentTarget.getBoundingClientRect();
+             const x = ((e.touches[0].clientX - rect.left) / rect.width) * 100;
+             setBasketPos(x);
+           }}>
+        {isPlaying && (
+          <>
+            <div className="absolute text-2xl transition-all" style={{ left: `${cakePos.x}%`, top: `${cakePos.y}%` }}>🍰</div>
+            <div className="absolute bottom-2 h-4 w-20 bg-[#C5A15B] rounded-full transition-all -translate-x-1/2" style={{ left: `${basketPos}%` }}></div>
+          </>
+        )}
+        {!isPlaying && timeLeft === 30 && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <button 
+              onClick={() => { setIsPlaying(true); setScore(0); setTimeLeft(30); }}
+              className="bg-[#C5A15B] text-[#260814] font-bold px-8 py-3 rounded-full text-sm uppercase tracking-widest"
+            >
+              Start Game
+            </button>
+          </div>
+        )}
+        {!isPlaying && timeLeft === 0 && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#260814]/90 space-y-3">
+            <h4 className="font-serif text-2xl text-[#E7CD94]">Game Over!</h4>
+            <p className="text-sm text-[#FFF4E5]">Final Score: {score} Slices</p>
+            <button 
+              onClick={() => { setIsPlaying(true); setScore(0); setTimeLeft(30); }}
+              className="bg-[#C5A15B] text-[#260814] font-bold px-6 py-2 rounded-full text-xs uppercase tracking-widest"
+            >
+              Play Again
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Game 3: Catch Bouquet
+function GameBouquet() {
+  const [score, setScore] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [basketPos, setBasketPos] = useState(50);
+  const [itemPos, setItemPos] = useState({ x: 50, y: 0, type: 'bouquet' });
+
+  useEffect(() => {
+    let timer, gameLoop;
+    if (isPlaying && timeLeft > 0) {
+      timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
+      gameLoop = setInterval(() => {
+        setItemPos(prev => {
+          let newY = prev.y + 4;
+          let newX = prev.x;
+          if (newY > 90) {
+            if (Math.abs(newX - basketPos) < 15) {
+              if (prev.type === 'bouquet') setScore(s => s + 2);
+              else setScore(s => Math.max(0, s - 1));
+            }
+            return { 
+              x: Math.floor(Math.random() * 80) + 10, 
+              y: 0, 
+              type: Math.random() > 0.3 ? 'bouquet' : 'bomb' 
+            };
+          }
+          return { ...prev, y: newY };
+        });
+      }, 50);
+    } else if (timeLeft === 0) {
+      setIsPlaying(false);
+    }
+    return () => { clearInterval(timer); clearInterval(gameLoop); };
+  }, [isPlaying, timeLeft, basketPos]);
+
+  return (
+    <div className="max-w-lg mx-auto text-center space-y-4">
+      <h3 className="font-serif text-2xl text-[#E7CD94]">Catch the Wedding Bouquet</h3>
+      <p className="text-sm text-[#FFF4E5]/70">Catch bouquets (💐) for points, avoid shoes (👞)!</p>
+      
+      <div className="flex justify-between text-sm font-bold text-[#E7CD94] px-4">
+        <span>Score: {score}</span>
+        <span>Time: {timeLeft}s</span>
+      </div>
+
+      <div className="relative h-72 bg-[#400D20] border-2 border-[#C5A15B]/50 rounded-2xl overflow-hidden cursor-pointer"
+           onMouseMove={(e) => {
+             const rect = e.currentTarget.getBoundingClientRect();
+             const x = ((e.clientX - rect.left) / rect.width) * 100;
+             setBasketPos(x);
+           }}>
+        {isPlaying && (
+          <>
+            <div className="absolute text-2xl transition-all" style={{ left: `${itemPos.x}%`, top: `${itemPos.y}%` }}>
+              {itemPos.type === 'bouquet' ? '💐' : '👞'}
+            </div>
+            <div className="absolute bottom-2 h-4 w-20 bg-[#C5A15B] rounded-full transition-all -translate-x-1/2" style={{ left: `${basketPos}%` }}></div>
+          </>
+        )}
+        {!isPlaying && timeLeft === 30 && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <button 
+              onClick={() => { setIsPlaying(true); setScore(0); setTimeLeft(30); }}
+              className="bg-[#C5A15B] text-[#260814] font-bold px-8 py-3 rounded-full text-sm uppercase tracking-widest"
+            >
+              Start Game
+            </button>
+          </div>
+        )}
+        {!isPlaying && timeLeft === 0 && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#260814]/90 space-y-3">
+            <h4 className="font-serif text-2xl text-[#E7CD94]">Time's Up!</h4>
+            <p className="text-sm text-[#FFF4E5]">Final Score: {score} points</p>
+            <p className="text-xs text-[#C5A15B]">Title: {score > 15 ? "Chief Bouquet Collector" : "Future Wedding Star"}</p>
+            <button 
+              onClick={() => { setIsPlaying(true); setScore(0); setTimeLeft(30); }}
+              className="bg-[#C5A15B] text-[#260814] font-bold px-6 py-2 rounded-full text-xs uppercase tracking-widest"
+            >
+              Play Again
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Game 4: Vow Builder
+function GameVows() {
+  const [dance, setDance] = useState('Gbese');
+  const [eat, setEat] = useState('Jollof Rice');
+  const [celebrate, setCelebrate, ] = useState('oro');
+  const [generated, setGenerated] = useState(false);
+
+  return (
+    <div className="max-w-xl mx-auto space-y-6 text-center">
+      <h3 className="font-serif text-2xl text-[#E7CD94]">Complete the Chibeck Love Vow</h3>
+      {!generated ? (
+        <div className="space-y-4 text-left">
+          <p className="text-sm text-[#FFF4E5]/80">Fill in your hilarious wedding vows:</p>
+          <div className="space-y-3">
+            <label className="block text-xs uppercase tracking-widest text-[#E7CD94]">At Chibeck 2026, I promise to dance like:</label>
+            <select value={dance} onChange={e => setDance(e.target.value)} className="w-full bg-[#400D20] border border-[#C5A15B] rounded-xl p-3 text-sm text-[#FFF4E5]">
+              <option>Gbese & Amala Step</option>
+              <option>Michael Jackson on Sunday</option>
+              <option>Untrained Cultural Dancer</option>
+            </select>
+
+            <label className="block text-xs uppercase tracking-widest text-[#E7CD94]">Eat like:</label>
+            <select value={eat} onChange={e => setEat(e.target.value)} className="w-full bg-[#400D20] border border-[#C5A15B] rounded-xl p-3 text-sm text-[#FFF4E5]">
+              <option>Party Jollof Champion</option>
+              <option>ASUU Strike Survivor</option>
+              <option>VIP Guest with Special Plate</option>
+            </select>
+          </div>
+          <button 
+            onClick={() => setGenerated(true)}
+            className="w-full bg-[#C5A15B] text-[#260814] font-bold py-3 rounded-xl uppercase tracking-widest text-xs mt-4"
+          >
+            Generate My Vow Card
+          </button>
+        </div>
+      ) : (
+        <div className="bg-[#400D20] border border-[#C5A15B] p-6 rounded-2xl space-y-4">
+          <h4 className="font-serif text-xl text-[#E7CD94]">Official Chibeck Vow Certificate</h4>
+          <p className="text-sm text-[#FFF4E5] italic">
+            "At Chibeck 2026, I solemnly promise to dance like <span className="text-[#C5A15B] font-bold">{dance}</span>, eat like <span className="text-[#C5A15B] font-bold">{eat}</span>, and celebrate love with pure joy!"
+          </p>
+          <div className="flex justify-center space-x-4 pt-2">
+            <button 
+              onClick={() => {
+                navigator.clipboard.writeText(`My Chibeck Vow: Dance like ${dance}, eat like ${eat}!`);
+                alert("Vow copied to clipboard!");
+              }}
+              className="bg-[#C5A15B] text-[#260814] px-6 py-2 rounded-full text-xs font-bold uppercase"
+            >
+              Copy Vow
+            </button>
+            <button 
+              onClick={() => setGenerated(false)}
+              className="border border-[#C5A15B] text-[#E7CD94] px-6 py-2 rounded-full text-xs uppercase"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Game 5: Guest Quiz
+function GameQuiz() {
+  const [result, setResult] = useState(null);
+
+  const determineStyle = () => {
+    const styles = [
+      "The Dance-Floor Commander",
+      "The Professional Food Inspector",
+      "The Fashion Icon",
+      "The Emotional Bestie",
+      "The Early Guest Who Keeps Checking Time"
+    ];
+    setResult(styles[Math.floor(Math.random() * styles.length)]);
+  };
+
+  return (
+    <div className="max-w-xl mx-auto space-y-6 text-center">
+      <h3 className="font-serif text-2xl text-[#E7CD94]">Wedding Guest Personality Test</h3>
+      {!result ? (
+        <div className="space-y-4">
+          <p className="text-sm text-[#FFF4E5]/80">Find out your true wedding guest archetype!</p>
+          <button 
+            onClick={determineStyle}
+            className="bg-[#C5A15B] text-[#260814] font-bold px-8 py-3 rounded-full text-xs uppercase tracking-widest"
+          >
+            Reveal My Wedding Persona
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4 bg-[#400D20] border border-[#C5A15B] p-6 rounded-2xl">
+          <span className="text-xs uppercase tracking-widest text-[#C5A15B]">Your Guest Style is:</span>
+          <h4 className="font-serif text-3xl text-[#E7CD94]">{result}</h4>
+          <button 
+            onClick={() => setResult(null)}
+            className="bg-[#C5A15B] text-[#260814] px-6 py-2 rounded-full text-xs font-bold uppercase"
+          >
+            Retake Quiz
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Game 6: Memory Match
+function GameMemory() {
+  const [cards, setCards] = useState([
+    { id: 1, icon: '💍', matched: false },
+    { id: 2, icon: '💍', matched: false },
+    { id: 3, icon: '🎂', matched: false },
+    { id: 4, icon: '🎂', matched: false },
+    { id: 5, icon: '💐', matched: false },
+    { id: 6, icon: '💐', matched: false },
+    { id: 7, icon: '🥂', matched: false },
+    { id: 8, icon: '🥂', matched: false }
+  ].sort(() => Math.random() - 0.5));
+
+  const [selected, setSelected] = useState([]);
+  const [moves, setMoves] = useState(0);
+
+  const handleCardClick = (index) => {
+    if (cards[index].matched || selected.includes(index) || selected.length === 2) return;
+    const newSelected = [...selected, index];
+    setSelected(newSelected);
+
+    if (newSelected.length === 2) {
+      setMoves(m => m + 1);
+      const [first, second] = newSelected;
+      if (cards[first].icon === cards[second].icon) {
+        setCards(cards.map((c, i) => i === first || i === second ? { ...c, matched: true } : c));
+        setSelected([]);
+      } else {
+        setTimeout(() => setSelected([]), 800);
+      }
+    }
+  };
+
+  return (
+    <div className="max-w-md mx-auto space-y-4 text-center">
+      <h3 className="font-serif text-2xl text-[#E7CD94]">Build Your Chibeck Memory</h3>
+      <p className="text-sm text-[#FFF4E5]/70">Moves: {moves}</p>
+      <div className="grid grid-cols-4 gap-3">
+        {cards.map((card, idx) => {
+          const isFlipped = selected.includes(idx) || card.matched;
+          return (
+            <div
+              key={idx}
+              onClick={() => handleCardClick(idx)}
+              className={`h-20 rounded-xl flex items-center justify-center text-3xl cursor-pointer border transition-all ${isFlipped ? 'bg-[#C5A15B]/20 border-[#C5A15B]' : 'bg-[#400D20] border-[#C5A15B]/40'}`}
+            >
+              {isFlipped ? card.icon : '❓'}
+            </div>
+          );
+        })}
+      </div>
+      <button 
+        onClick={() => {
+          setCards([...cards].sort(() => Math.random() - 0.5).map(c => ({ ...c, matched: false })));
+          setSelected([]);
+          setMoves(0);
+        }}
+        className="bg-[#C5A15B] text-[#260814] px-6 py-2 rounded-full text-xs font-bold uppercase"
+      >
+        Restart Game
+      </button>
+    </div>
+  );
+}
+
+function InvitationCard() {
+  return (
+    <div className="max-w-2xl mx-auto space-y-6">
+      <div className="text-center space-y-2">
+        <span className="text-xs uppercase tracking-[0.3em] text-[#C5A15B]">Official Pass</span>
+        <h2 className="font-serif text-4xl text-[#E7CD94]">Digital Invitation Card</h2>
+      </div>
+
+      {/* Invitation Card Render */}
+      <div className="bg-[#260814] border-4 border-[#C5A15B] rounded-3xl p-8 sm:p-12 shadow-2xl text-center space-y-6 relative overflow-hidden">
+        <div className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-[#C5A15B]"></div>
+        <div className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-[#C5A15B]"></div>
+        <div className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-[#C5A15B]"></div>
+        <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-[#C5A15B]"></div>
+
+        <div className="w-16 h-16 rounded-full border border-[#C5A15B] flex items-center justify-center mx-auto text-[#E7CD94] font-serif text-xl">
+          C×B
+        </div>
+
+        <div className="space-y-2">
+          <span className="text-xs uppercase tracking-[0.3em] text-[#C5A15B]">The Wedding of</span>
+          <h3 className="font-serif text-4xl sm:text-5xl text-[#FFF4E5]">CHINEDU BENJAMIN <br />&<br /> IFEOMA BECKY</h3>
+          <p className="text-xs tracking-widest text-[#E7CD94] uppercase pt-2">{WEDDING_CONFIG.brand}</p>
+        </div>
+
+        <div className="border-y border-[#C5A15B]/30 py-6 space-y-2 text-sm text-[#FFF4E5]/90">
+          <p className="font-serif italic text-lg text-[#E7CD94]">{WEDDING_CONFIG.dateString}</p>
+          <p>{WEDDING_CONFIG.location}</p>
+        </div>
+
+        <div className="flex justify-center space-x-4 pt-4">
+          <button 
+            onClick={() => window.print()}
+            className="bg-[#C5A15B] text-[#260814] font-bold px-6 py-3 rounded-full text-xs uppercase tracking-widest flex items-center space-x-2"
+          >
+            <Printer size={16} />
+            <span>Print Invitation</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RSVPSection() {
+  const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState({ name: '', email: '', phone: '', attendance: 'accept', guests: '1', dietary: '', message: '' });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!form.name) {
+      alert("Please enter your full name.");
+      return;
+    }
+    setSubmitted(true);
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-8">
+      <div className="text-center space-y-3">
+        <span className="text-xs uppercase tracking-[0.3em] text-[#C5A15B]">Join Our Celebration</span>
+        <h2 className="font-serif text-4xl text-[#E7CD94]">We Saved a Seat For You</h2>
+        <p className="text-sm text-[#FFF4E5]/80 italic">"Kindly let us know if you will be celebrating with us in Asaba."</p>
+      </div>
+
+      {!submitted ? (
+        <form onSubmit={handleSubmit} className="bg-[#260814] border border-[#C5A15B]/40 rounded-3xl p-8 shadow-2xl space-y-6">
+          <div className="space-y-2">
+            <label className="block text-xs uppercase tracking-widest text-[#E7CD94]">Full Name *</label>
+            <input 
+              type="text" 
+              required
+              value={form.name} 
+              onChange={e => setForm({ ...form, name: e.target.value })}
+              className="w-full bg-[#400D20] border border-[#C5A15B]/50 rounded-xl p-3 text-sm text-[#FFF4E5]"
+              placeholder="e.g. Dr. & Mrs. Okoro"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="block text-xs uppercase tracking-widest text-[#E7CD94]">Email Address</label>
+              <input 
+                type="email" 
+                value={form.email} 
+                onChange={e => setForm({ ...form, email: e.target.value })}
+                className="w-full bg-[#400D20] border border-[#C5A15B]/50 rounded-xl p-3 text-sm text-[#FFF4E5]"
+                placeholder="guest@example.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-xs uppercase tracking-widest text-[#E7CD94]">Phone Number</label>
+              <input 
+                type="tel" 
+                value={form.phone} 
+                onChange={e => setForm({ ...form, phone: e.target.value })}
+                className="w-full bg-[#400D20] border border-[#C5A15B]/50 rounded-xl p-3 text-sm text-[#FFF4E5]"
+                placeholder="08000000000"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="block text-xs uppercase tracking-widest text-[#E7CD94]">Will you attend?</label>
+              <select 
+                value={form.attendance} 
+                onChange={e => setForm({ ...form, attendance: e.target.value })}
+                className="w-full bg-[#400D20] border border-[#C5A15B]/50 rounded-xl p-3 text-sm text-[#FFF4E5]"
+              >
+                <option value="accept">Joyfully Accepts</option>
+                <option value="decline">Regretfully Declines</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="block text-xs uppercase tracking-widest text-[#E7CD94]">Number of Guests</label>
+              <select 
+                value={form.guests} 
+                onChange={e => setForm({ ...form, guests: e.target.value })}
+                className="w-full bg-[#400D20] border border-[#C5A15B]/50 rounded-xl p-3 text-sm text-[#FFF4E5]"
+              >
+                <option value="1">1 Guest</option>
+                <option value="2">2 Guests</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-xs uppercase tracking-widest text-[#E7CD94]">Message to the Couple</label>
+            <textarea 
+              rows="3"
+              value={form.message} 
+              onChange={e => setForm({ ...form, message: e.target.value })}
+              className="w-full bg-[#400D20] border border-[#C5A15B]/50 rounded-xl p-3 text-sm text-[#FFF4E5]"
+              placeholder="Leave your warm wishes..."
+            ></textarea>
+          </div>
+
+          <button 
+            type="submit"
+            className="w-full bg-gradient-to-r from-[#C5A15B] to-[#E7CD94] text-[#260814] font-bold py-4 rounded-xl uppercase tracking-widest text-sm shadow-lg hover:opacity-90 transition-all"
+          >
+            Submit RSVP
+          </button>
+        </form>
+      ) : (
+        <div className="bg-[#260814] border border-[#C5A15B] rounded-3xl p-8 text-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-[#C5A15B]/20 border border-[#C5A15B] flex items-center justify-center mx-auto text-[#E7CD94]">
+            <Check size={32} />
+          </div>
+          <h3 className="font-serif text-3xl text-[#E7CD94]">RSVP Received!</h3>
+          <p className="text-sm text-[#FFF4E5]">Thank you, {form.name}. We can't wait to celebrate love with you in Asaba!</p>
+          <button 
+            onClick={() => setSubmitted(false)}
+            className="text-xs uppercase tracking-widest text-[#C5A15B] underline pt-4"
+          >
+            Submit another response
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
